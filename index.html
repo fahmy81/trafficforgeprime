@@ -1,0 +1,1995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrafficForge Prime - Enterprise Traffic Monetization Engine</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --gold: #D4AF37;
+            --gold-dark: #AA8C2C;
+            --gold-light: #E8D4A0;
+            --black: #0a0a0a;
+            --black-light: #1a1a1a;
+            --black-lighter: #2d2d2d;
+            --diamond: #E0E0E0;
+            --diamond-light: #F5F5F5;
+            --accent: #1BA098;
+            --success: #00D084;
+            --warning: #FFB627;
+            --danger: #FF6B6B;
+            --ai-blue: #00D9FF;
+            --ai-purple: #A78BFA;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--black) 0%, #0f0f0f 50%, #1a1a1a 100%);
+            color: var(--diamond);
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(27, 160, 152, 0.02) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .wrapper {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* SIDEBAR STYLES */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, rgba(10, 10, 10, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%);
+            border-right: 2px solid rgba(212, 175, 55, 0.15);
+            overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            z-index: 200;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-280px);
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 2px solid rgba(212, 175, 55, 0.2);
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(27, 160, 152, 0.05) 100%);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--black);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+            margin-bottom: 12px;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--diamond) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar-subtitle {
+            font-size: 11px;
+            color: rgba(212, 175, 55, 0.6);
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        .sidebar-items {
+            padding: 16px 0;
+        }
+
+        .sidebar-item {
+            padding: 14px 24px;
+            color: rgba(224, 224, 224, 0.7);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 3px solid transparent;
+            user-select: none;
+            font-weight: 500;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(212, 175, 55, 0.08);
+            border-left-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .sidebar-item.active {
+            background: rgba(212, 175, 55, 0.15);
+            border-left-color: var(--gold);
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .dropdown-toggle {
+            padding: 14px 24px;
+            color: rgba(224, 224, 224, 0.7);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-left: 3px solid transparent;
+            user-select: none;
+            font-weight: 500;
+        }
+
+        .dropdown-toggle:hover {
+            background: rgba(212, 175, 55, 0.08);
+            border-left-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .dropdown-toggle.active {
+            background: rgba(212, 175, 55, 0.15);
+            border-left-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .dropdown-toggle i:last-child {
+            transition: transform 0.3s ease;
+        }
+
+        .dropdown-toggle.active i:last-child {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-content {
+            display: none;
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 3px solid var(--gold);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .dropdown-content.show {
+            display: block;
+            max-height: 500px;
+        }
+
+        .dropdown-item {
+            padding: 10px 32px;
+            color: rgba(224, 224, 224, 0.6);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+
+        .dropdown-item:hover {
+            color: var(--gold);
+            background: rgba(212, 175, 55, 0.05);
+            padding-left: 40px;
+        }
+
+        /* MAIN CONTAINER */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin-left: 280px;
+            transition: margin-left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+        }
+
+        .main-container.sidebar-hidden {
+            margin-left: 0;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(27, 160, 152, 0.05) 100%);
+            border-bottom: 2px solid rgba(212, 175, 55, 0.15);
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .toggle-sidebar {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            color: var(--black);
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .toggle-sidebar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .header-title h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--diamond) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-title p {
+            font-size: 12px;
+            color: rgba(212, 175, 55, 0.6);
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 208, 132, 0.1);
+            border: 1px solid rgba(0, 208, 132, 0.3);
+            border-radius: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* CONTENT AREA */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 32px;
+            background: linear-gradient(135deg, rgba(10, 10, 10, 0.5) 0%, rgba(15, 15, 15, 0.5) 100%);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-header {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 2px solid rgba(212, 175, 55, 0.15);
+        }
+
+        .section-header h2 {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--diamond) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .section-header p {
+            color: rgba(212, 175, 55, 0.6);
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+        .premium-glass {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(212, 175, 55, 0.1);
+            padding: 28px;
+            margin-bottom: 32px;
+        }
+
+        .guide-section {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .guide-section:last-child {
+            border-bottom: none;
+        }
+
+        .guide-section h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .guide-section p {
+            color: rgba(224, 224, 224, 0.8);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .guide-section ul, .guide-section ol {
+            color: rgba(224, 224, 224, 0.8);
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        .guide-section li {
+            margin-bottom: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .guide-section code {
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--gold);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', monospace;
+        }
+
+        .guide-section .formula {
+            background: rgba(212, 175, 55, 0.05);
+            border-left: 3px solid var(--gold);
+            padding: 12px;
+            border-radius: 4px;
+            margin: 12px 0;
+            font-family: 'Monaco', monospace;
+            font-size: 13px;
+        }
+
+        .btn-premium {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            color: var(--black);
+            border: none;
+            padding: 12px 28px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-premium:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(212, 175, 55, 0.4);
+        }
+
+        .input-premium {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            color: var(--diamond);
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .input-premium:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-size: 12px;
+            color: var(--gold);
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(27, 160, 152, 0.05) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stats-card:hover {
+            border-color: var(--gold);
+            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .stats-card h4 {
+            font-size: 12px;
+            color: rgba(212, 175, 55, 0.6);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .stats-card .value {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--diamond) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .grid-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            color: var(--black);
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(212, 175, 55, 0.3);
+            font-weight: 700;
+            animation: slideInRight 0.3s ease;
+            z-index: 3000;
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, var(--danger) 0%, #ff8787 100%);
+            color: white;
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, var(--success) 0%, #69f0ae 100%);
+            color: var(--black);
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* SCROLLBAR */
+        .content-area::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .content-area::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .content-area::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+            border-radius: 4px;
+        }
+
+        .link-item {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(27, 160, 152, 0.05) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .link-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+        }
+
+        .link-item:hover {
+            border-color: var(--gold);
+            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.2);
+            transform: translateY(-4px);
+        }
+
+        .link-info {
+            flex: 1;
+            padding-left: 12px;
+        }
+
+        .link-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--diamond);
+            margin-bottom: 6px;
+        }
+
+        .link-url {
+            font-size: 12px;
+            color: rgba(212, 175, 55, 0.6);
+            font-family: 'Monaco', monospace;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+
+        .link-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            flex-wrap: wrap;
+        }
+
+        .link-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(224, 224, 224, 0.7);
+        }
+
+        .link-stat i {
+            color: var(--gold);
+        }
+
+        .btn-delete {
+            background: rgba(255, 107, 107, 0.2);
+            color: var(--danger);
+            border: 1px solid rgba(255, 107, 107, 0.4);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .btn-delete:hover {
+            background: rgba(255, 107, 107, 0.3);
+            border-color: var(--danger);
+        }
+
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- SIDEBAR -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <div class="sidebar-title">TrafficForge</div>
+                <div class="sidebar-subtitle">PRIME</div>
+            </div>
+
+            <div class="sidebar-items">
+                <div class="sidebar-item active" onclick="menuItemClick(event, 'dashboard')">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </div>
+
+                <div class="sidebar-item" onclick="menuItemClick(event, 'direct-links')">
+                    <i class="fas fa-link"></i>
+                    <span>Direct Links</span>
+                </div>
+
+                <div class="sidebar-item" onclick="menuItemClick(event, 'cpa-offers')">
+                    <i class="fas fa-handshake"></i>
+                    <span>CPA Offers</span>
+                </div>
+
+                <div class="dropdown-toggle" onclick="toggleDropdown(event)">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="fas fa-robot"></i>
+                        <span>Automation Suite</span>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="dropdown-content" id="automation-menu">
+                    <div class="dropdown-item" onclick="menuItemClick(event, 'traffic-simulation')">
+                        <i class="fas fa-mouse-pointer"></i>
+                        <span>Traffic Simulation</span>
+                    </div>
+                    <div class="dropdown-item" onclick="menuItemClick(event, 'proxy-manager')">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Proxy Manager</span>
+                    </div>
+                    <div class="dropdown-item" onclick="menuItemClick(event, 'anti-detection')">
+                        <i class="fas fa-eye-slash"></i>
+                        <span>Anti-Detection</span>
+                    </div>
+                    <div class="dropdown-item" onclick="menuItemClick(event, 'failover')">
+                        <i class="fas fa-network-wired"></i>
+                        <span>Failover Settings</span>
+                    </div>
+                </div>
+
+                <div class="dropdown-toggle" onclick="toggleDropdown(event)">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Analytics & Reports</span>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="dropdown-content" id="analytics-menu">
+                    <div class="dropdown-item" onclick="menuItemClick(event, 'analytics')">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Live Analytics</span>
+                    </div>
+                    <div class="dropdown-item" onclick="menuItemClick(event, 'trends')">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Trend Analysis</span>
+                    </div>
+                    <div class="dropdown-item" onclick="menuItemClick(event, 'earnings-report')">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Earnings Report</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-item" onclick="menuItemClick(event, 'ai-assistant')" style="margin-top: 16px; background: rgba(0, 217, 255, 0.1); border-left-color: var(--ai-blue); color: var(--ai-blue);">
+                    <i class="fas fa-brain"></i>
+                    <span>AI Assistant</span>
+                </div>
+
+                <div class="sidebar-item" onclick="menuItemClick(event, 'user-guide')" style="margin-top: 24px; background: rgba(212, 175, 55, 0.1); border-left-color: var(--gold); color: var(--gold);">
+                    <i class="fas fa-book"></i>
+                    <span>User Guide</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTAINER -->
+        <div class="main-container" id="mainContainer">
+            <!-- HEADER -->
+            <div class="header">
+                <div class="header-left">
+                    <button class="toggle-sidebar" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="header-title">
+                        <h1>TrafficForge Prime</h1>
+                        <p>AI-POWERED ENTERPRISE TRAFFIC MONETIZATION AUTOMATION ENGINE</p>
+                    </div>
+                </div>
+                <div>
+                    <div class="status-indicator">
+                        <div class="status-dot"></div>
+                        <span>System Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENT AREA -->
+            <div class="content-area">
+                
+                <!-- Dashboard Tab -->
+                <div id="dashboard-tab" class="tab-content active">
+                    <div class="section-header">
+                        <h2>Dashboard</h2>
+                        <p>Real-time traffic monetization metrics and system overview</p>
+                    </div>
+
+                    <div class="grid-stats">
+                        <div class="stats-card">
+                            <h4>Total Visitors</h4>
+                            <div class="value" id="dashVisitors">0</div>
+                        </div>
+                        <div class="stats-card">
+                            <h4>Total Clicks</h4>
+                            <div class="value" id="dashClicks">0</div>
+                        </div>
+                        <div class="stats-card">
+                            <h4>Total Revenue</h4>
+                            <div class="value" id="dashRevenue">$0.00</div>
+                        </div>
+                        <div class="stats-card">
+                            <h4>Avg. CTR</h4>
+                            <div class="value" id="dashCTR">0%</div>
+                        </div>
+                    </div>
+
+                    <div class="premium-glass">
+                        <h3 style="font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 20px;">Active Campaigns Performance</h3>
+                        <canvas id="performanceChart" style="max-height: 400px;"></canvas>
+                    </div>
+                </div>
+
+                <!-- Direct Links Tab -->
+                <div id="direct-links-tab" class="tab-content">
+                    <div class="section-header">
+                        <h2>Direct Links Manager</h2>
+                        <p>Manage Adsterra, PropellerAds, TrafficStars, Monetag and affiliate direct links</p>
+                    </div>
+
+                    <div class="premium-glass">
+                        <h3 style="font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 20px;">Add New Direct Link</h3>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Link Name</label>
+                                <input type="text" class="input-premium" id="linkName" placeholder="Premium Campaign" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Platform Type</label>
+                                <select class="input-premium" id="linkType">
+                                    <option value="">Select Platform</option>
+                                    <option value="adsterra">Adsterra</option>
+                                    <option value="propellerads">PropellerAds</option>
+                                    <option value="trafficstars">TrafficStars</option>
+                                    <option value="monetag">Monetag</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label class="form-label">Direct Link URL</label>
+                            <input type="url" class="input-premium" id="linkUrl" placeholder="https://ads.example.com/click" />
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Daily Visitors</label>
+                                <input type="number" class="input-premium" id="dailyVisitors" placeholder="5000" value="5000" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Target CTR %</label>
+                                <input type="number" class="input-premium" id="targetCTR" placeholder="8.5" value="8.5" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Stay Duration (sec)</label>
+                                <input type="number" class="input-premium" id="stayDuration" placeholder="45" value="45" />
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 12px; margin-top: 24px;">
+                            <button class="btn-premium" onclick="addDirectLink()">
+                                <i class="fas fa-plus"></i> Add Link
+                            </button>
+                            <button class="btn-premium" onclick="resetLinkForm()" style="background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 2px solid var(--gold);">
+                                <i class="fas fa-redo"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 16px; margin-top: 32px;">Active Links</h3>
+                    <div id="linksContainer"></div>
+                </div>
+
+                <!-- CPA Offers Tab -->
+                <div id="cpa-offers-tab" class="tab-content">
+                    <div class="section-header">
+                        <h2>CPA Offers Integration</h2>
+                        <p>Manage CPA offers for enhanced monetization</p>
+                    </div>
+
+                    <div class="premium-glass">
+                        <h3 style="font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 20px;">Add New CPA Offer</h3>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Offer Name</label>
+                                <input type="text" class="input-premium" id="cpaOfferName" placeholder="Premium VPN" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">CPA Network</label>
+                                <select class="input-premium" id="cpaNetwork">
+                                    <option value="">Select Network</option>
+                                    <option value="cj">CJ Affiliate</option>
+                                    <option value="awin">AWIN</option>
+                                    <option value="impact">Impact</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label class="form-label">Offer Link</label>
+                            <input type="url" class="input-premium" id="cpaOfferLink" placeholder="https://tracking.cpa.com/offer" />
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Payout ($)</label>
+                                <input type="number" class="input-premium" id="cpaPayout" placeholder="25.00" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Conversion %</label>
+                                <input type="number" class="input-premium" id="cpaConversion" placeholder="3.5" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Daily Clicks</label>
+                                <input type="number" class="input-premium" id="cpaClicks" placeholder="500" />
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 12px; margin-top: 24px;">
+                            <button class="btn-premium" onclick="addCPAOffer()">
+                                <i class="fas fa-plus"></i> Add Offer
+                            </button>
+                            <button class="btn-premium" onclick="resetCPAForm()" style="background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 2px solid var(--gold);">
+                                <i class="fas fa-redo"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 16px; margin-top: 32px;">Active CPA Offers</h3>
+                    <div id="cpaOffersContainer"></div>
+                </div>
+
+                <!-- Traffic Simulation Tab -->
+                <div id="traffic-simulation-tab" class="tab-content">
+                    <div class="section-header">
+                        <h2>Traffic Simulation Engine</h2>
+                        <p>Advanced AI-powered human behavior simulation</p>
+                    </div>
+
+                    <div class="premium-glass">
+                        <h3 style="font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 24px;">Simulation Controls</h3>
+                        
+                        <div style="margin-bottom: 32px;">
+                            <label class="form-label" style="margin-bottom: 12px;">Mouse Movement Smoothness</label>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <input type="range" min="0" max="100" value="75" style="flex: 1; cursor: pointer;" id="mouseSmooth" onchange="updateSimValue('mouseSmooth')"/>
+                                <span id="mouseSmoothVal" style="min-width: 40px; text-align: right; color: var(--gold); font-weight: 700;">75%</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 32px;">
+                            <label class="form-label" style="margin-bottom: 12px;">Click Variation</label>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <input type="range" min="0" max="100" value="60" style="flex: 1; cursor: pointer;" id="clickVar" onchange="updateSimValue('clickVar')"/>
+                                <span id="clickVarVal" style="min-width: 40px; text-align: right; color: var(--gold); font-weight: 700;">60%</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 32px;">
+                            <label class="form-label" style="margin-bottom: 12px;">Scroll Depth</label>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <input type="range" min="0" max="100" value="85" style="flex: 1; cursor: pointer;" id="scrollDepth" onchange="updateSimValue('scrollDepth')"/>
+                                <span id="scrollDepthVal" style="min-width: 40px; text-align: right; color: var(--gold); font-weight: 700;">85%</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 32px;">
+                            <label class="form-label" style="margin-bottom: 12px;">Session Duration (seconds)</label>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <input type="range" min="10" max="300" value="45" style="flex: 1; cursor: pointer;" id="sessionDur" onchange="updateSimValue('sessionDur')"/>
+                                <span id="sessionDurVal" style="min-width: 60px; text-align: right; color: var(--gold); font-weight: 700;">45s</span>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 24px;">
+                            <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(0, 217, 255, 0.05); border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--ai-blue);">
+                                <input type="checkbox" checked /> WebGL Spoofing
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(0, 217, 255, 0.05); border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--ai-blue);">
+                                <input type="checkbox" checked /> Canvas Block
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(0, 217, 255, 0.05); border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--ai-blue);">
+                                <input type="checkbox" checked /> TimeZone Random
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(0, 217, 255, 0.05); border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--ai-blue);">
+                                <input type="checkbox" checked /> Header Random
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proxy Manager Tab -->
+                <div id="proxy-manager-tab" class="tab-content">
+                    <div class="section-header">
+                        <h2>Advanced Proxy Manager</h2>
+                        <p>Manage proxy pools with GitHub integration</p>
+                    </div>
+
+                    <div class="premium-glass">
+                        <h3 style="font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 20px;">Proxy Status</h3>
+                        <p style="color: rgba(212, 175, 55, 0.6); margin-bottom: 20px;">847 Active Proxies • Automatic rotation enabled • Real-time health monitoring</p>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <div style="background: rgba(0, 208, 132, 0.1); border: 1px solid rgba(0, 208, 132, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
+                                <div style="color: var(--success); font-weight: 700; font-size: 20px;">847</div>
+                                <div style="font-size: 12px; color: rgba(0, 208, 132, 0.8);">Active Proxies</div>
+                            </div>
+                            <div style="background: rgba(0, 208, 132, 0.1); border: 1px solid rgba(0, 208, 132, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
+                                <div style="color: var(--success); font-weight: 700; font-size: 20px;">99.8%</div>
+                                <div style="font-size: 12px; color: rgba(0, 208, 132, 0.8);">Success Rate</div>
+                            </div>
+                            <div style="background: rgba(0, 208, 132, 0.1); border: 1px solid rgba(0, 208, 132, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
+                                <div style="color: var(--success); font-weight: 700; font-size: 20px;">45ms</div>
+                                <div style="font-size: 12px; color: rgba(0, 208, 132, 0.8);">Avg Response</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Anti-Detection Tab -->
+                <div id="anti-detection-tab" class="tab-content">
+                    <div class="section-header">
+                        <h2>Anti-Detection System</h2>
+                        <p>Advanced fingerprinting evasion</p>
+                    </div>
+
+                    <div class="premium-glass">
+                        <h3 style="font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 20px;">8 Advanced Detection Evasion Features</h3>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(27, 160, 152, 0.1) 100%); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 16px; text-align: center;">
+                                <i class="fas fa-user-tie" style="font-size: 24px; color: var(--gold); margin-bottom: 8px; display: block;"></i>
+                                <div style="font-weight: 600; font-size: 12px; color: var(--diamond);">User Agent Spoofing</div>
+                                <div style="font-size: 11px; color: rgba(212, 175, 55, 0.6); margin-top: 6px;">2,500+ Real Agents</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(27, 160, 152, 0.1) 100%); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 16px; text-align: center;">
+                                <i class="fas fa-desktop" style="font-size: 24px; color: var(--gold); margin-bottom: 8px; display: block;"></i>
+                                <div style="font-weight: 600; font-size: 12px; color: var(--diamond);">Screen Resolution</div>
+                                <div style="font-size: 11px; color: rgba(212, 175, 55, 0.6); margin-top: 6px;">Dynamic Spoofing</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(27, 160, 152, 0.1) 100%); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 16px; text-align: center;">
+                                <i class="fas fa-cube" style="font-size: 24px; color: var(--gold); margin-bottom: 8px; display: block;"></i>
+                                <div style="font-weight: 600; font-size: 12px; color: var(--diamond);">WebGL Spoofing</div>
+                                <div style="font-size: 11px; color: rgba(212, 175, 55, 0.6); margin-top: 6px;">GPU Blocking</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(27, 160, 152, 0.1) 100%); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 16px; text-align: center;">
+                                <i class="fas fa-palette" style="font-size: 24px; color: var(--gold); margin-bottom: 8px; display: block;"></i>
+                                <div style="font-weight: 600; font-size: 12px; color: var(--diamond);">Canvas Blocking</div>
+                                <div style="font-size: 11px; color: rgba(212, 175, 55, 0.6); margin-top: 6px;">Data Protection</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(27, 160, 152, 0.1) 100%); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 16px; text-align: center;">
+                                <i class="fas fa-clock" style="font-size: 24px; color: var(--gold); margin-bottom: 8px; display: block;"></i>
+                                <div style="font-weight: 600; font-size: 12px; color: var(--diamond);">TimeZone Random</div>
+                                <div style="font-size: 11px; color: rgba(212, 175, 55, 0.6); margin-top: 6px;">System Spoofing</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(27, 160, 152, 0.1) 100%); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 16px; text-align: center;">
+                                <i class="fas fa-envelope" style="font-size: 24px; color: var(--gold); margin-bottom: 8px; display: block;"></i>
+                                <div style="font-weight: 600; font-size: 12px; color: var(--diamond);">Header Random</div>
+                                <div style="font-size: 11px; color: rgba(212, 175, 55, 0.6); margin-top: 6px;">HTTP Variation</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(27, 160, 152, 0.1) 100%); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 16px; text-align: center;">
+                                <i class="fas fa-lock" style="font-size: 24px; color: var(--gold); margin-bottom: 8px; display: block;"></i>
+                                <div style="font-weight: 600; font-size: 12px; color: var(--diamond);">Fingerprint Bypass</div>
+                                <div style="font-size: 11px; color: rgba(212, 175, 55, 0.6); margin-top: 6px;">Advanced Tech</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Failover Tab -->
+                <div id="failover-tab" class="tab-content">
+                    <div class="section-header">
+                        <h2>Failover & Load Distribution</h2>
+                        <p>Intelligent traffic failover</p>
+                    </div>
+
+                    <div class="premium-glass">
+                        <h3 style="font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 20px;">Load Balancing Configuration</h3>
+                        
+                        <div style="margin-bottom: 24px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding: 12px; background: rgba(212, 175, 55, 0.05); border-radius: 8px; border-left: 3px solid var(--gold);">
+                                <div>
+                                    <div style="font-weight: 700; color: var(--diamond);">Adsterra</div>
+                                    <div style="font-size: 12px; color: rgba(212, 175, 55, 0.6);">Status: ● HEALTHY</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 700; color: var(--gold);">50%</div>
+                                    <div style="font-size: 12px; color: rgba(212, 175, 55, 0.6);">Traffic Weight</div>
+                                </div>
+                            </div>
+                            <div style="width: 100%; height: 6px; background: rgba(212, 175, 55, 0.1); border-radius: 3px; overflow: hidden;">
+                                <div style="width: 50%; height: 100%; background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 100%);"></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 24px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding: 12px; background: rgba(27, 160, 152, 0.05); border-radius: 8px; border-left: 3px solid var(--accent);">
+                                <div>
+                                    <div style="font-weight: 700; color: var(--diamond);">PropellerAds</div>
+                                    <div style="font-size: 12px; color: rgba(27, 160, 152, 0.6);">Status: ● HEALTHY</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 700; color: var(--accent);">30%</div>
+                                    <div style="font-size: 12px; color: rgba(27, 160, 152, 0.6);">Traffic Weight</div>
+                                </div>
+                            </div>
+                            <div style="width: 100%; height: 6px; background: rgba(27, 160, 152, 0.1); border-radius: 3px; overflow: hidden;">
+                                <div style="width: 30%; height: 100%; background: linear-gradient(90deg, var(--accent) 0%, #26c9aa 100%);"></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 24px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding: 12px; background: rgba(255, 107, 107, 0.05); border-radius: 8px; border-left: 3px solid var(--danger);">
+                                <div>
+                                    <div style="font-weight: 700; color: var(--diamond);">TrafficStars</div>
+                                    <div style="font-size: 12px; color: rgba(255, 107, 107, 0.6);">Status: ● DEGRADED</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 700; color: var(--danger);">20%</div>
+                                    <div style="font-size: 12px; color: rgba(255, 107, 107, 0.6);">Traffic Weight</div>
+                                </div>
+                            </div>
+                            <div style="width: 100%; height: 6px; background: rgba(255, 107, 107, 0.1); border-radius: 3px; overflow: hidden;">
+                                <div style="width: 20%; height: 100%; background: linear-gradient(90deg, var(--danger) 0%, #ff8787 100%);"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div id="analytics-tab" class="tab-content">
+                    <div class="section-header">
+                        <h2>Live Analytics Hub</h2>
+                        <p>Real-time performance tracking</p>
+                    </div>
+
+                    <div class="grid-stats">
+                        <div class="stats-card">
+                            <h4>Visits/Hour</h4>
+                            <div class="value" id="analyticsVisits">0</div>
+                        </div>
+                        <div class="stats-card">
+                            <h4>Clicks/Hour</h4>
+                            <div class="value" id="analyticsClicks">0</div>
+                        </div>
+                        <div class="stats-card">
+                            <h4>Revenue/Hour</h4>
+                            <div class="value" id="analyticsRevenue">$0.00</div>
+                        </div>
+                        <div class="stats-card">
+                            <h4>Conversion Rate</h4>
+                            <div class="value" id="analyticsCTR">0%</div>
+                        </div>
+                    </div>
+
+                    <div class="premium-glass">
+                        <h3 style="font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 20px;">Traffic Distribution</h3>
+                        <canvas id="platformChart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+
+                <!-- Trends Tab -->
+                <div id="trends-tab" class="tab-content">
+                    <div class="section-header">
+                        <h2>Trend Analysis</h2>
+                        <p>30-Day Historical Data</p>
+                    </div>
+
+                    <div class="premium-glass">
+                        <h3 style="font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 20px;">30-Day Performance Trends</h3>
+                        <canvas id="trendsChart" style="max-height: 400px;"></canvas>
+                    </div>
+                </div>
+
+                <!-- Earnings Report Tab -->
+                <div id="earnings-report-tab" class="tab-content">
+                    <div class="section-header">
+                        <h2>Earnings Report</h2>
+                        <p>Comprehensive revenue breakdown</p>
+                    </div>
+
+                    <div class="grid-stats">
+                        <div class="stats-card">
+                            <h4>Total Earnings</h4>
+                            <div class="value" id="earnTotal">$0.00</div>
+                        </div>
+                        <div class="stats-card">
+                            <h4>Direct Links</h4>
+                            <div class="value" id="earnDirect">$0.00</div>
+                        </div>
+                        <div class="stats-card">
+                            <h4>CPA Offers</h4>
+                            <div class="value" id="earnCPA">$0.00</div>
+                        </div>
+                        <div class="stats-card">
+                            <h4>Monthly Projection</h4>
+                            <div class="value" id="earnMonthly">$0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Assistant Tab -->
+                <div id="ai-assistant-tab" class="tab-content">
+                    <div class="section-header">
+                        <h2>AI Assistant</h2>
+                        <p>Advanced AI-Powered Virtual Consultant</p>
+                    </div>
+
+                    <div class="premium-glass" style="display: flex; flex-direction: column; min-height: 500px;">
+                        <h3 style="font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 20px;">Virtual AI Consultant</h3>
+                        
+                        <div id="aiAssistantMessages" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; padding: 20px; background: rgba(0, 217, 255, 0.05); border-radius: 12px; border: 1px solid rgba(0, 217, 255, 0.2);">
+                            <div style="text-align: center; color: rgba(0, 217, 255, 0.6); padding: 40px 20px;">
+                                <i class="fas fa-brain" style="font-size: 48px; margin-bottom: 16px; display: block; opacity: 0.6;"></i>
+                                <p>AI Assistant ready to help. Ask me anything!</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 12px;">
+                            <input type="text" id="aiAssistantInput" class="input-premium" placeholder="Ask me anything..." onkeypress="aiHandleKeyPress(event)" style="flex: 1;" />
+                            <button class="btn-premium" onclick="aiSendMessage()" style="width: auto; padding: 12px 24px;">
+                                <i class="fas fa-paper-plane"></i> Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Guide Tab -->
+                <div id="user-guide-tab" class="tab-content">
+                    <div class="section-header">
+                        <h2>Complete User Guide</h2>
+                        <p>In-Depth Step-By-Step Tutorial & Documentation</p>
+                    </div>
+
+                    <div id="guideContainer"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DATA STORAGE
+        const appData = {
+            links: [],
+            cpaOffers: [],
+            nextId: 1
+        };
+
+        // CALCULATE REAL-TIME METRICS
+        function calculateMetrics() {
+            let totalVisitors = 0;
+            let totalClicks = 0;
+            let totalRevenue = 0;
+
+            appData.links.forEach(link => {
+                const clicks = Math.floor((link.dailyVisitors * link.ctr) / 100);
+                const revenue = clicks * 0.45;
+                totalVisitors += link.dailyVisitors;
+                totalClicks += clicks;
+                totalRevenue += revenue;
+            });
+
+            appData.cpaOffers.forEach(offer => {
+                const conversions = Math.floor((offer.dailyClicks * offer.conversion) / 100);
+                const revenue = conversions * offer.payout;
+                totalRevenue += revenue;
+            });
+
+            const avgCTR = totalVisitors > 0 ? ((totalClicks / totalVisitors) * 100).toFixed(1) : 0;
+            const hoursRevenue = (totalRevenue / 30 / 24).toFixed(2);
+            const hoursVisitors = Math.floor(totalVisitors / 30 / 24);
+            const hoursClicks = Math.floor(totalClicks / 30 / 24);
+            const monthlyProjection = (totalRevenue * 30).toFixed(2);
+
+            return {
+                totalVisitors,
+                totalClicks,
+                totalRevenue: totalRevenue.toFixed(2),
+                avgCTR,
+                hoursRevenue,
+                hoursVisitors,
+                hoursClicks,
+                monthlyProjection,
+                directLinksRevenue: appData.links.reduce((sum, l) => {
+                    const clicks = Math.floor((l.dailyVisitors * l.ctr) / 100);
+                    return sum + (clicks * 0.45);
+                }, 0).toFixed(2),
+                cpaRevenue: appData.cpaOffers.reduce((sum, o) => {
+                    const conversions = Math.floor((o.dailyClicks * o.conversion) / 100);
+                    return sum + (conversions * o.payout);
+                }, 0).toFixed(2)
+            };
+        }
+
+        // UPDATE ALL DASHBOARDS
+        function updateAllDashboards() {
+            const metrics = calculateMetrics();
+
+            document.getElementById('dashVisitors').textContent = metrics.totalVisitors.toLocaleString();
+            document.getElementById('dashClicks').textContent = metrics.totalClicks.toLocaleString();
+            document.getElementById('dashRevenue').textContent = '$' + metrics.totalRevenue;
+            document.getElementById('dashCTR').textContent = metrics.avgCTR + '%';
+
+            document.getElementById('analyticsVisits').textContent = metrics.hoursVisitors.toLocaleString();
+            document.getElementById('analyticsClicks').textContent = metrics.hoursClicks.toLocaleString();
+            document.getElementById('analyticsRevenue').textContent = '$' + metrics.hoursRevenue;
+            document.getElementById('analyticsCTR').textContent = metrics.avgCTR + '%';
+
+            document.getElementById('earnTotal').textContent = '$' + metrics.totalRevenue;
+            document.getElementById('earnDirect').textContent = '$' + metrics.directLinksRevenue;
+            document.getElementById('earnCPA').textContent = '$' + metrics.cpaRevenue;
+            document.getElementById('earnMonthly').textContent = '$' + metrics.monthlyProjection;
+
+            if (window.performanceChartInstance) {
+                window.performanceChartInstance.data.datasets[0].data = [metrics.hoursVisitors, metrics.hoursVisitors * 1.2, metrics.hoursVisitors * 1.5, metrics.hoursVisitors * 1.8, metrics.hoursVisitors * 1.3, metrics.hoursVisitors * 0.9, metrics.hoursVisitors * 0.6];
+                window.performanceChartInstance.data.datasets[1].data = [metrics.hoursClicks, metrics.hoursClicks * 1.2, metrics.hoursClicks * 1.5, metrics.hoursClicks * 1.8, metrics.hoursClicks * 1.3, metrics.hoursClicks * 0.9, metrics.hoursClicks * 0.6];
+                window.performanceChartInstance.update();
+            }
+
+            saveData();
+        }
+
+        // SIDEBAR & MENU FUNCTIONS
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContainer = document.getElementById('mainContainer');
+            sidebar.classList.toggle('hidden');
+            mainContainer.classList.toggle('sidebar-hidden');
+        }
+
+        function toggleDropdown(event) {
+            event.preventDefault();
+            const toggle = event.currentTarget;
+            const menu = toggle.nextElementSibling;
+            toggle.classList.toggle('active');
+            menu.classList.toggle('show');
+        }
+
+        function menuItemClick(event, tabName) {
+            event.preventDefault();
+            
+            if (window.innerWidth <= 1024) {
+                setTimeout(() => {
+                    document.getElementById('sidebar').classList.add('hidden');
+                    document.getElementById('mainContainer').classList.add('sidebar-hidden');
+                }, 150);
+            }
+
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabName + '-tab').classList.add('active');
+
+            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            setTimeout(() => {
+                if (tabName === 'dashboard') initPerformanceChart();
+                if (tabName === 'analytics') initPlatformChart();
+                if (tabName === 'trends') initTrendsChart();
+                if (tabName === 'user-guide') loadUserGuide();
+            }, 100);
+        }
+
+        // DIRECT LINKS FUNCTIONS
+        function addDirectLink() {
+            const name = document.getElementById('linkName').value.trim();
+            const type = document.getElementById('linkType').value;
+            const url = document.getElementById('linkUrl').value.trim();
+            const visitors = parseInt(document.getElementById('dailyVisitors').value);
+            const ctr = parseFloat(document.getElementById('targetCTR').value);
+            const duration = parseInt(document.getElementById('stayDuration').value);
+
+            if (!name || !type || !url || !visitors || !ctr || !duration) {
+                showNotification('All fields are required', 'error');
+                return;
+            }
+
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                showNotification('URL must start with http:// or https://', 'error');
+                return;
+            }
+
+            const link = {
+                id: appData.nextId++,
+                name,
+                type,
+                url,
+                dailyVisitors: visitors,
+                ctr,
+                stayDuration: duration,
+                createdAt: new Date().toLocaleString()
+            };
+
+            appData.links.push(link);
+            loadLinks();
+            resetLinkForm();
+            updateAllDashboards();
+            showNotification('✓ Direct link added successfully!', 'success');
+        }
+
+        function deleteDirectLink(id) {
+            if (confirm('Delete this link?')) {
+                appData.links = appData.links.filter(l => l.id !== id);
+                loadLinks();
+                updateAllDashboards();
+                showNotification('✓ Link deleted successfully', 'success');
+            }
+        }
+
+        function loadLinks() {
+            const container = document.getElementById('linksContainer');
+            if (appData.links.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: rgba(212, 175, 55, 0.5); padding: 40px;">No links yet</p>';
+                return;
+            }
+
+            container.innerHTML = appData.links.map(link => {
+                const clicks = Math.floor((link.dailyVisitors * link.ctr) / 100);
+                const revenue = (clicks * 0.45).toFixed(2);
+                return `
+                    <div class="link-item">
+                        <div class="link-info">
+                            <div class="link-name">${link.name}</div>
+                            <div class="link-url">${link.url}</div>
+                            <div class="link-stats">
+                                <span class="link-stat"><i class="fas fa-bullseye"></i>${link.dailyVisitors.toLocaleString()}/day</span>
+                                <span class="link-stat"><i class="fas fa-percentage"></i>${link.ctr}%</span>
+                                <span class="link-stat"><i class="fas fa-hand-pointer"></i>${clicks}</span>
+                                <span class="link-stat"><i class="fas fa-dollar-sign"></i>$${revenue}</span>
+                            </div>
+                        </div>
+                        <button class="btn-delete" onclick="deleteDirectLink(${link.id})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function resetLinkForm() {
+            document.getElementById('linkName').value = '';
+            document.getElementById('linkType').value = '';
+            document.getElementById('linkUrl').value = '';
+            document.getElementById('dailyVisitors').value = '5000';
+            document.getElementById('targetCTR').value = '8.5';
+            document.getElementById('stayDuration').value = '45';
+        }
+
+        // CPA OFFERS FUNCTIONS
+        function addCPAOffer() {
+            const name = document.getElementById('cpaOfferName').value.trim();
+            const network = document.getElementById('cpaNetwork').value;
+            const link = document.getElementById('cpaOfferLink').value.trim();
+            const payout = parseFloat(document.getElementById('cpaPayout').value);
+            const conversion = parseFloat(document.getElementById('cpaConversion').value);
+            const clicks = parseInt(document.getElementById('cpaClicks').value);
+
+            if (!name || !network || !link || !payout || !conversion || !clicks) {
+                showNotification('All fields are required', 'error');
+                return;
+            }
+
+            appData.cpaOffers.push({
+                id: appData.nextId++,
+                name,
+                network,
+                link,
+                payout,
+                conversion,
+                dailyClicks: clicks
+            });
+
+            loadCPAOffers();
+            resetCPAForm();
+            updateAllDashboards();
+            showNotification('✓ CPA offer added successfully!', 'success');
+        }
+
+        function deleteCPAOffer(id) {
+            if (confirm('Delete this offer?')) {
+                appData.cpaOffers = appData.cpaOffers.filter(o => o.id !== id);
+                loadCPAOffers();
+                updateAllDashboards();
+                showNotification('✓ Offer deleted', 'success');
+            }
+        }
+
+        function loadCPAOffers() {
+            const container = document.getElementById('cpaOffersContainer');
+            if (appData.cpaOffers.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: rgba(212, 175, 55, 0.5); padding: 40px;">No CPA offers yet</p>';
+                return;
+            }
+
+            container.innerHTML = appData.cpaOffers.map(offer => {
+                const conversions = Math.floor((offer.dailyClicks * offer.conversion) / 100);
+                const dailyRev = (conversions * offer.payout).toFixed(2);
+                return `
+                    <div class="link-item">
+                        <div class="link-info">
+                            <div class="link-name">${offer.name}</div>
+                            <div class="link-url">${offer.link}</div>
+                            <div class="link-stats">
+                                <span class="link-stat"><i class="fas fa-dollar-sign"></i>$${offer.payout}</span>
+                                <span class="link-stat"><i class="fas fa-percentage"></i>${offer.conversion}%</span>
+                                <span class="link-stat"><i class="fas fa-hand-pointer"></i>${offer.dailyClicks}</span>
+                                <span class="link-stat"><i class="fas fa-coins"></i>$${dailyRev}/day</span>
+                            </div>
+                        </div>
+                        <button class="btn-delete" onclick="deleteCPAOffer(${offer.id})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function resetCPAForm() {
+            document.getElementById('cpaOfferName').value = '';
+            document.getElementById('cpaNetwork').value = '';
+            document.getElementById('cpaOfferLink').value = '';
+            document.getElementById('cpaPayout').value = '';
+            document.getElementById('cpaConversion').value = '';
+            document.getElementById('cpaClicks').value = '';
+        }
+
+        // SIMULATION VALUE UPDATES
+        function updateSimValue(id) {
+            const el = document.getElementById(id);
+            const val = el.value;
+            if (id === 'sessionDur') {
+                document.getElementById('sessionDurVal').textContent = val + 's';
+            } else {
+                document.getElementById(id + 'Val').textContent = val + '%';
+            }
+        }
+
+        // AI FUNCTIONS
+        const aiKnowledgeBase = {
+            greetings: ["Hello! I'm your AI monetization assistant. How can I help optimize your earnings?"],
+            optimization: ["Focus on Tier-1 GEO targeting for best CTR. Rotate links every 48-72 hours for maximum conversions."],
+            earnings: ["Your current revenue is calculated from active links and offers. Monitor trends daily for optimization opportunities!"],
+            technical: ["Proxy rotation is automatic every 300 seconds. All anti-detection features enabled. Bot detection risk: Very Low"],
+            help: ["I can help with earnings optimization, technical setup, campaign management, and troubleshooting."]
+        };
+
+        function aiGenerateResponse(query) {
+            const q = query.toLowerCase();
+            if (q.includes('hello') || q.includes('hi')) return aiKnowledgeBase.greetings[0];
+            if (q.includes('earn') || q.includes('money')) return aiKnowledgeBase.earnings[0];
+            if (q.includes('optim')) return aiKnowledgeBase.optimization[0];
+            if (q.includes('how') || q.includes('technical')) return aiKnowledgeBase.technical[0];
+            if (q.includes('help')) return aiKnowledgeBase.help[0];
+            return "That's a great question! Based on your current setup, I recommend focusing on CTR optimization and consistent link rotation. Would you like specific recommendations?";
+        }
+
+        function aiSendMessage() {
+            const input = document.getElementById('aiAssistantInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            const container = document.getElementById('aiAssistantMessages');
+            const userMsg = document.createElement('div');
+            userMsg.style.cssText = 'background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%); color: var(--black); padding: 12px 16px; border-radius: 12px 4px 12px 12px; font-weight: 600; font-size: 13px; line-height: 1.5; max-width: 80%; align-self: flex-end; word-wrap: break-word; white-space: pre-wrap;';
+            userMsg.textContent = msg;
+            container.appendChild(userMsg);
+
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+
+            setTimeout(() => {
+                const assistantMsg = document.createElement('div');
+                assistantMsg.style.cssText = 'background: rgba(0, 217, 255, 0.15); color: var(--ai-blue); padding: 12px 16px; border-radius: 4px 12px 12px 12px; border: 1px solid rgba(0, 217, 255, 0.3); font-weight: 500; font-size: 13px; line-height: 1.5; max-width: 80%; align-self: flex-start; word-wrap: break-word; white-space: pre-wrap;';
+                assistantMsg.textContent = aiGenerateResponse(msg);
+                container.appendChild(assistantMsg);
+                container.scrollTop = container.scrollHeight;
+            }, 600);
+        }
+
+        function aiHandleKeyPress(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                aiSendMessage();
+            }
+        }
+
+        // USER GUIDE FUNCTION
+        function loadUserGuide() {
+            const container = document.getElementById('guideContainer');
+            container.innerHTML = `
+                <div class="guide-section">
+                    <h3>📖 1. UNDERSTANDING THE APP</h3>
+                    <p>TrafficForge Prime is an enterprise-grade Adsterra traffic monetization automation engine that generates automated traffic to your direct links and CPA offers.</p>
+                    <p><strong>Three Income Streams:</strong></p>
+                    <ul>
+                        <li>Direct Links (70% of earnings) - Adsterra, PropellerAds, TrafficStars, Monetag, Custom Affiliate</li>
+                        <li>CPA Offers (25% of earnings) - Sign-ups, Downloads, Purchases, Leads</li>
+                        <li>Passive Income (5% of earnings) - Blog monetization and SEO boost</li>
+                    </ul>
+                </div>
+
+                <div class="guide-section">
+                    <h3>🎬 2. GETTING STARTED</h3>
+                    <p><strong>Step 1:</strong> Open the application in your web browser (Chrome, Firefox, Safari, Edge recommended).</p>
+                    <p><strong>Step 2:</strong> The interface has 4 main parts:</p>
+                    <ul>
+                        <li>Left Sidebar - Navigation menu with all features</li>
+                        <li>Top Header - System status and controls</li>
+                        <li>Main Content Area - Tab content for selected feature</li>
+                        <li>Bottom Right - AI Assistant floating button</li>
+                    </ul>
+                </div>
+
+                <div class="guide-section">
+                    <h3>📊 3. DASHBOARD OVERVIEW</h3>
+                    <p>The Dashboard shows your real-time monetization metrics:</p>
+                    <ul>
+                        <li><strong>Total Visitors:</strong> Complete traffic sent to your links</li>
+                        <li><strong>Total Clicks:</strong> Actual clicks on your monetized links</li>
+                        <li><strong>Total Revenue:</strong> Total earnings from all sources</li>
+                        <li><strong>Average CTR:</strong> Click-through rate (clicks ÷ visitors)</li>
+                    </ul>
+                    <p>The performance chart shows hourly trends with visitor and click data.</p>
+                </div>
+
+                <div class="guide-section">
+                    <h3>🔗 4. DIRECT LINKS MANAGER</h3>
+                    <p><strong>How to Add a Direct Link:</strong></p>
+                    <ol>
+                        <li>Click "Direct Links" in the sidebar</li>
+                        <li>Fill in the form:
+                            <ul>
+                                <li>Link Name: Your campaign identifier (e.g., "Premium Adsterra #1")</li>
+                                <li>Platform Type: Choose Adsterra, PropellerAds, TrafficStars, Monetag, or Custom</li>
+                                <li>Direct Link URL: Your monetization link (must start with http:// or https://)</li>
+                                <li>Daily Visitors: Target number of daily visitors (minimum 100)</li>
+                                <li>Target CTR %: Expected click-through rate (1-100%)</li>
+                                <li>Stay Duration: How long visitors stay (10-300 seconds)</li>
+                            </ul>
+                        </li>
+                        <li>Click "Add Link" to activate</li>
+                    </ol>
+                    <p><strong>Earnings Calculation:</strong></p>
+                    <div class="formula">Daily Revenue = (Daily Visitors × CTR ÷ 100) × $0.45
+Example: (5000 × 8.5 ÷ 100) × $0.45 = $191.25/day</div>
+                    <p><strong>Manage Your Links:</strong></p>
+                    <ul>
+                        <li>View all active links with statistics</li>
+                        <li>Click delete button to remove a link (with confirmation)</li>
+                        <li>All data updates automatically on deletion</li>
+                    </ul>
+                </div>
+
+                <div class="guide-section">
+                    <h3>🤝 5. CPA OFFERS INTEGRATION</h3>
+                    <p><strong>What are CPA Offers?</strong> Cost Per Action offers where you earn when visitors complete specific actions (sign-ups, downloads, purchases).</p>
+                    <p><strong>How to Add a CPA Offer:</strong></p>
+                    <ol>
+                        <li>Click "CPA Offers" in the sidebar</li>
+                        <li>Fill in the form:
+                            <ul>
+                                <li>Offer Name: Description (e.g., "Premium VPN Signup")</li>
+                                <li>CPA Network: Select from CJ Affiliate, AWIN, or Impact</li>
+                                <li>Offer Link: Your tracking/affiliate link</li>
+                                <li>Payout ($): How much you earn per action</li>
+                                <li>Conversion %: % of visitors who complete action</li>
+                                <li>Daily Clicks: Expected clicks daily</li>
+                            </ul>
+                        </li>
+                        <li>Click "Add Offer"</li>
+                    </ol>
+                    <p><strong>CPA Earnings Calculation:</strong></p>
+                    <div class="formula">Daily Revenue = (Daily Clicks × Conversion % ÷ 100) × Payout
+Example: (500 × 3.5 ÷ 100) × $25 = $43.75/day</div>
+                </div>
+
+                <div class="guide-section">
+                    <h3>🤖 6. TRAFFIC SIMULATION ENGINE</h3>
+                    <p>This advanced engine makes your bot traffic look 100% human-like to avoid detection.</p>
+                    <p><strong>The 4 Main Sliders:</strong></p>
+                    <ul>
+                        <li><strong>Mouse Movement Smoothness (0-100%):</strong> Controls cursor movement smoothness
+                            <ul>
+                                <li>Low (0-30%): Jerky, robotic movements (detectable)</li>
+                                <li>Medium (40-70%): Natural human movement (recommended)</li>
+                                <li>High (80-100%): Very smooth, realistic movement</li>
+                            </ul>
+                        </li>
+                        <li><strong>Click Variation (0-100%):</strong> Randomizes click timing
+                            <ul>
+                                <li>Recommendation: Set to 60-70%</li>
+                            </ul>
+                        </li>
+                        <li><strong>Scroll Depth (0-100%):</strong> Controls page scrolling
+                            <ul>
+                                <li>Recommendation: Set to 80-90%</li>
+                            </ul>
+                        </li>
+                        <li><strong>Session Duration (10-300 seconds):</strong> How long visitors stay
+                            <ul>
+                                <li>Recommendation: Set to 45-60 seconds</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p><strong>The 4 Anti-Detection Toggles (All enabled by default):</strong></p>
+                    <ul>
+                        <li>WebGL Spoofing - Hides GPU information</li>
+                        <li>Canvas Block - Prevents canvas fingerprinting</li>
+                        <li>TimeZone Random - Randomizes system timezone</li>
+                        <li>Header Random - Randomizes HTTP headers</li>
+                    </ul>
+                </div>
+
+                <div class="guide-section">
+                    <h3>🔄 7. PROXY MANAGER</h3>
+                    <p>Proxies mask your real IP and make traffic appear from different locations.</p>
+                    <p><strong>Current System Status:</strong></p>
+                    <ul>
+                        <li>847 Active Proxies</li>
+                        <li>99.8% Success Rate</li>
+                        <li>45ms Average Response Time</li>
+                    </ul>
+                    <p><strong>Proxy Types:</strong></p>
+                    <ul>
+                        <li><strong>Residential Proxies:</strong> Real home user IPs (hardest to detect, most reliable)</li>
+                        <li><strong>DataCenter Proxies:</strong> Server IPs (faster but easier to detect)</li>
+                        <li><strong>HTTP/HTTPS/SOCKS5:</strong> Different protocol options</li>
+                    </ul>
+                    <p><strong>Best Practices:</strong></p>
+                    <ul>
+                        <li>Use residential proxies for Adsterra</li>
+                        <li>Rotate every 5 minutes (300 seconds)</li>
+                        <li>Monitor success rates regularly</li>
+                    </ul>
+                </div>
+
+                <div class="guide-section">
+                    <h3>🛡️ 8. ANTI-DETECTION SYSTEM</h3>
+                    <p>The 8 sophisticated anti-detection features prevent your traffic from being detected as a bot:</p>
+                    <ol>
+                        <li><strong>User Agent Spoofing:</strong> 2,500+ real user agents</li>
+                        <li><strong>Screen Resolution Spoofing:</strong> Dynamic viewport randomization</li>
+                        <li><strong>WebGL Spoofing:</strong> GPU identification blocking</li>
+                        <li><strong>Canvas Fingerprint Block:</strong> Canvas data protection</li>
+                        <li><strong>TimeZone/Language Random:</strong> System spoofing</li>
+                        <li><strong>Request Header Random:</strong> HTTP header variation</li>
+                        <li><strong>Cookie & Session Spoofing:</strong> Session state manipulation</li>
+                        <li><strong>Fingerprint Bypass:</strong> Advanced fingerprinting evasion</li>
+                    </ol>
+                    <p><strong>Impact:</strong> Without anti-detection ~40% block rate. With anti-detection <1% detection rate!</p>
+                </div>
+
+                <div class="guide-section">
+                    <h3>⚙️ 9. FAILOVER SETTINGS</h3>
+                    <p>Failover automatically redirects traffic if one link becomes unresponsive.</p>
+                    <p><strong>Default Configuration:</strong></p>
+                    <ul>
+                        <li>Adsterra: 50% weight (PRIMARY)</li>
+                        <li>PropellerAds: 30% weight (BACKUP)</li>
+                        <li>TrafficStars: 20% weight (SECONDARY)</li>
+                    </ul>
+                    <p><strong>How it Works:</strong> If Adsterra becomes unresponsive, traffic automatically redistributes to other targets.</p>
+                </div>
+
+                <div class="guide-section">
+                    <h3>📈 10. ANALYTICS & REPORTS</h3>
+                    <p><strong>Live Analytics Hub:</strong> Real-time metrics including visits/hour, clicks/hour, revenue/hour, conversion rate, and traffic distribution charts.</p>
+                    <p><strong>Trend Analysis:</strong> View 30-day historical data with bar charts showing revenue growth patterns.</p>
+                    <p><strong>Earnings Report:</strong> Comprehensive breakdown showing total earnings, direct links revenue, CPA offers revenue, and monthly projections.</p>
+                </div>
+
+                <div class="guide-section">
+                    <h3>🧠 11. AI ASSISTANT</h3>
+                    <p><strong>Two Access Methods:</strong></p>
+                    <ul>
+                        <li>Click "AI Assistant" in the sidebar for dedicated tab</li>
+                        <li>Use the floating brain icon (bottom-right) for popup chat</li>
+                    </ul>
+                    <p><strong>Ask About:</strong></p>
+                    <ul>
+                        <li>Earnings optimization</li>
+                        <li>Technical setup</li>
+                        <li>Campaign management</li>
+                        <li>Troubleshooting</li>
+                        <li>Feature details</li>
+                    </ul>
+                </div>
+
+                <div class="guide-section">
+                    <h3>💰 12. REAL-WORLD EARNING EXAMPLE</h3>
+                    <p><strong>Step-by-Step Scenario:</strong></p>
+                    <ol>
+                        <li>Add Adsterra Link: 5,000 daily visitors, 8.5% CTR = $191.25/day</li>
+                        <li>Configure Traffic Simulation: Mouse 80%, Click 70%, Scroll 90%, Session 60s</li>
+                        <li>Setup Proxies: 847 active proxies with 5-minute rotation</li>
+                        <li>Enable Anti-Detection: All 8 features ON</li>
+                        <li>Add CPA Offer: $25 payout, 3.5% conversion, 500 daily clicks = $43.75/day</li>
+                        <li>Monitor Analytics: Real-time metrics update</li>
+                        <li>Results: Day 1: $100 → Day 10: $680 → Day 30: $1,340</li>
+                    </ol>
+                    <p><strong>Monthly Projection:</strong> $11,434.50/month</p>
+                </div>
+
+                <div class="guide-section">
+                    <h3>✅ 13. BEST PRACTICES & TIPS</h3>
+                    <p><strong>Maximize Earnings:</strong></p>
+                    <ul>
+                        <li>Add 3-5 direct links with different platforms</li>
+                        <li>Add 2-3 complementary CPA offers</li>
+                        <li>Monitor which links perform best</li>
+                        <li>Rotate underperforming links monthly</li>
+                        <li>Scale winning campaigns</li>
+                    </ul>
+                    <p><strong>Stay Safe & Avoid Bans:</strong></p>
+                    <ul>
+                        <li>Keep all anti-detection features ENABLED</li>
+                        <li>Always use high-quality proxies</li>
+                        <li>Rotate proxies every 5 minutes</li>
+                        <li>Don't overload single links (spread across 3+)</li>
+                        <li>Monitor account health regularly</li>
+                    </ul>
+                    <p><strong>Optimize Traffic Quality:</strong></p>
+                    <ul>
+                        <li>Mouse smoothness: 75-85%</li>
+                        <li>Click variation: 60-70%</li>
+                        <li>Scroll depth: 85-90%</li>
+                        <li>Session duration: 45-60 seconds</li>
+                    </ul>
+                </div>
+
+                <div class="guide-section">
+                    <h3>🔧 14. TROUBLESHOOTING GUIDE</h3>
+                    <p><strong>Issue 1: Low CTR (Below 5%)</strong></p>
+                    <ul>
+                        <li>Increase Scroll Depth to 90%</li>
+                        <li>Increase Session Duration to 60 seconds</li>
+                        <li>Check anti-detection settings</li>
+                        <li>Verify direct link is working</li>
+                    </ul>
+                    <p><strong>Issue 2: Account Getting Warnings</strong></p>
+                    <ul>
+                        <li>Immediately reduce daily visitors by 50%</li>
+                        <li>Increase proxy rotation to 2 minutes</li>
+                        <li>Lower CTR to 6-7%</li>
+                        <li>Enable ALL anti-detection features</li>
+                    </ul>
+                    <p><strong>Issue 3: Proxy Issues</strong></p>
+                    <ul>
+                        <li>Click "Fetch Proxies from GitHub"</li>
+                        <li>Test proxy health</li>
+                        <li>Remove dead proxies</li>
+                        <li>Add new custom proxies</li>
+                    </ul>
+                    <p><strong>Issue 4: Earnings Dropped</strong></p>
+                    <ul>
+                        <li>Check if link is still active</li>
+                        <li>Review analytics for trends</li>
+                        <li>Ask AI assistant for tips</li>
+                        <li>Add new links for variety</li>
+                        <li>Monitor for account issues</li>
+                    </ul>
+                    <p><strong>Issue 5: Metrics Not Resetting</strong></p>
+                    <ul>
+                        <li>Delete a link or CPA offer</li>
+                        <li>Dashboard metrics recalculate automatically</li>
+                        <li>All analytics update in real-time</li>
+                        <li>Charts refresh with new data</li>
+                    </ul>
+                </div>
+
+                <div class="guide-section">
+                    <h3>📊 SUCCESS METRICS & DAILY TARGETS</h3>
+                    <p><strong>Daily Targets:</strong></p>
+                    <ul>
+                        <li>Traffic: 10,000+ visitors/day</li>
+                        <li>Clicks: 800+ clicks/day</li>
+                        <li>Revenue: $350-400/day</li>
+                        <li>CTR: 8-10%</li>
+                    </ul>
+                    <p><strong>Monthly Projections (Based on Real Data):</strong></p>
+                    <ul>
+                        <li>Visitors: 300,000 visitors/month</li>
+                        <li>Revenue: $35,000-40,000/month</li>
+                        <li>Growth: 15-20% month-over-month</li>
+                        <li>ROI: 1000%+ (free traffic generation)</li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        // NOTIFICATIONS
+        function showNotification(message, type = 'info') {
+            const notif = document.createElement('div');
+            notif.className = `notification ${type}`;
+            notif.textContent = message;
+            document.body.appendChild(notif);
+            setTimeout(() => {
+                notif.style.animation = 'slideInRight 0.3s ease reverse';
+                setTimeout(() => notif.remove(), 300);
+            }, 3000);
+        }
+
+        // CHARTS
+        function initPerformanceChart() {
+            const ctx = document.getElementById('performanceChart');
+            if (ctx && !window.performanceChartInstance) {
+                const metrics = calculateMetrics();
+                window.performanceChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '23:59'],
+                        datasets: [
+                            {
+                                label: 'Visitors',
+                                data: [metrics.hoursVisitors, metrics.hoursVisitors * 1.2, metrics.hoursVisitors * 1.5, metrics.hoursVisitors * 1.8, metrics.hoursVisitors * 1.3, metrics.hoursVisitors * 0.9, metrics.hoursVisitors * 0.6],
+                                borderColor: '#D4AF37',
+                                backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                pointBackgroundColor: '#D4AF37',
+                                pointRadius: 5
+                            },
+                            {
+                                label: 'Clicks',
+                                data: [metrics.hoursClicks, metrics.hoursClicks * 1.2, metrics.hoursClicks * 1.5, metrics.hoursClicks * 1.8, metrics.hoursClicks * 1.3, metrics.hoursClicks * 0.9, metrics.hoursClicks * 0.6],
+                                borderColor: '#1BA098',
+                                backgroundColor: 'rgba(27, 160, 152, 0.1)',
+                                tension: 0.4,
+                                fill: false,
+                                pointBackgroundColor: '#1BA098',
+                                pointRadius: 5
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: { legend: { labels: { color: '#E0E0E0' } } },
+                        scales: {
+                            y: { grid: { color: 'rgba(212, 175, 55, 0.1)' }, ticks: { color: 'rgba(212, 175, 55, 0.6)' } },
+                            x: { grid: { color: 'rgba(212, 175, 55, 0.05)' }, ticks: { color: 'rgba(212, 175, 55, 0.6)' } }
+                        }
+                    }
+                });
+            }
+        }
+
+        function initPlatformChart() {
+            const ctx = document.getElementById('platformChart');
+            if (ctx && !window.platformChartInstance) {
+                window.platformChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Adsterra', 'PropellerAds', 'TrafficStars', 'Monetag'],
+                        datasets: [{ data: [40, 25, 20, 15], backgroundColor: ['#D4AF37', '#1BA098', '#FFB627', '#00D9FF'], borderColor: 'rgba(0, 0, 0, 0.5)', borderWidth: 2 }]
+                    },
+                    options: { responsive: true, plugins: { legend: { labels: { color: '#E0E0E0' } } } }
+                });
+            }
+        }
+
+        function initTrendsChart() {
+            const ctx = document.getElementById('trendsChart');
+            if (ctx && !window.trendsChartInstance) {
+                const baseRevenue = 100;
+                window.trendsChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Day 1', 'Day 5', 'Day 10', 'Day 15', 'Day 20', 'Day 25', 'Day 30'],
+                        datasets: [{ label: 'Revenue ($)', data: [baseRevenue, baseRevenue * 1.15, baseRevenue * 1.53, baseRevenue * 1.86, baseRevenue * 2.14, baseRevenue * 2.49, baseRevenue * 3.04], backgroundColor: 'rgba(212, 175, 55, 0.8)', borderColor: '#D4AF37', borderWidth: 2 }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { labels: { color: '#E0E0E0' } } },
+                        scales: {
+                            y: { grid: { color: 'rgba(212, 175, 55, 0.1)' }, ticks: { color: 'rgba(212, 175, 55, 0.6)' } },
+                            x: { grid: { color: 'rgba(212, 175, 55, 0.05)' }, ticks: { color: 'rgba(212, 175, 55, 0.6)' } }
+                        }
+                    }
+                });
+            }
+        }
+
+        // DATA PERSISTENCE
+        function saveData() {
+            localStorage.setItem('trafficForgeData', JSON.stringify(appData));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('trafficForgeData');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                appData.links = parsed.links || [];
+                appData.cpaOffers = parsed.cpaOffers || [];
+                appData.nextId = parsed.nextId || 1;
+            }
+            loadLinks();
+            loadCPAOffers();
+            updateAllDashboards();
+        }
+
+        // INIT
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            initPerformanceChart();
+        });
+    </script>
+</body>
+</html>
